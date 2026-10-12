@@ -1,0 +1,28 @@
+name: Build OpenWrt for LGU GAPM-7200U
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Set swap space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 10
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential ecj fakeroot g++ gawk gettext git libncurses5-dev libssl-dev python3-distutils python3-dev rsync unzip zlib1g-dev file wget
+    - name: Clone OpenWrt Source
+      run: |
+        git clone --depth 1 https://github.com/openwrt/openwrt.git openwrt_src
+        cp -r ./* openwrt_src/ || true
+        cd openwrt_src
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        make download
+        make -j$(nproc) V=s
