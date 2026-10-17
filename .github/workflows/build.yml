@@ -1,4 +1,4 @@
-Name: Build OpenWrt for LGU GAPM-7200U
+name: Build OpenWrt for LGU GAPM-7200U
 
 on: 
   workflow_dispatch:
@@ -34,4 +34,3 @@ jobs:
       with:
         name: openwrt-gapm7200-firmware
         path: openwrt_src/bin/targets/**/*.bin
-        
