@@ -1,4 +1,4 @@
-name: Build OpenWrt for LGU GAPM-7200U
+Name: Build OpenWrt for LGU GAPM-7200U
 
 on: 
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set swap space
       uses: pierotofy/set-swap-space@master
