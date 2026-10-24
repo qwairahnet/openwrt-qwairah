@@ -1,0 +1,41 @@
+name: Build QWAIRAH Firmware for LGU GAPM-7200U
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Prepare Environment
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo apt-get update && sudo apt-get install -y build-essential clang flex bison gawk gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev
+    - name: Clone OpenWrt
+      run: git clone --depth 1 -b openwrt-23.05 https://github.com/openwrt/openwrt.git openwrt
+    - name: Feeds and Branding
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a && ./scripts/feeds install -a
+        sed -i 's/OpenWrt/QWAIRAH-LGU-GAPM7200U/g' package/base-files/files/bin/config_generate
+        git clone --depth 1 https://github.com/jerrykuku/luci-theme-argon.git package/downloads/luci-theme-argon
+    - name: Config Target
+      run: |
+        cd openwrt
+        echo "CONFIG_TARGET_ramips=y" > .config
+        echo "CONFIG_TARGET_ramips_mt7621=y" >> .config
+        echo "CONFIG_PACKAGE_luci=y" >> .config
+        echo "CONFIG_PACKAGE_luci-theme-argon=y" >> .config
+        echo "CONFIG_PACKAGE_wpad-mbedtls=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-mt76=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-mt7603=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-mt76x2=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-mt7615e=y" >> .config
+        make defconfig
+        make download -j8
+    - name: Compile
+      run: cd openwrt && make -j$(nproc) || make -j1 V=s
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: QWAIRAH-LGU-GAPM7200U
+        path: openwrt/bin/targets/ramips/mt7621/*.bin
