@@ -1,0 +1,52 @@
+name: Build QWAIRAH Firmware
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build QWAIRAH OpenWrt
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison gawk gcc-multilib g++-multilib \
+          gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+      - name: Clone OpenWrt Source
+        run: |
+          git clone --branch openwrt-23.05 --depth 1 https://github.com/openwrt/openwrt.git openwrt
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a -f
+      - name: Inject Custom Files & Config
+        run: |
+          cp -r files openwrt/
+          cp .config openwrt/.config
+          cd openwrt
+          make defconfig
+      - name: Compile Firmware
+        run: |
+          cd openwrt
+          echo "Building QWAIRAH firmware..."
+          make -j$(nproc) || make -j1 V=s
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: QWAIRAH-GAPM-7200-Firmware
+          path: |
+            openwrt/bin/targets/ramips/mt7621/*sysupgrade.bin
+            openwrt/bin/targets/ramips/mt7621/*factory.bin
+            openwrt/bin/targets/ramips/mt7621/*.bin

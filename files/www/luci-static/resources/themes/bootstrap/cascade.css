@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root {
+    --primary-green: #059669;
+    --dark-green: #022c22;
+    --bright-green: #10b981;
+    --gold-main: #d4af37;
+    --gold-bright: #fbbf24;
+    --gold-gradient: linear-gradient(135deg, #f59e0b 0%, #d4af37 50%, #b45309 100%);
+    --bg-gradient: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #021e17 100%);
+}
+* { font-family: 'Cairo', sans-serif !important; }
+body { background: var(--bg-gradient) !important; color: #f8fafc !important; min-height: 100vh; }
+header, .navbar, .dark nav { background: linear-gradient(90deg, #022c22 0%, #065f46 100%) !important; border-bottom: 2px solid var(--gold-main) !important; }
+.brand, .navbar-brand, h1, h2, h3, h4, .legend { color: var(--gold-bright) !important; font-weight: 700 !important; }
+a { color: var(--gold-bright) !important; }
+.cbi-section, .panel, .card, fieldset { background: rgba(2, 44, 34, 0.85) !important; border: 1px solid var(--gold-main) !important; border-radius: 12px !important; }
+.cbi-button, .btn, input[type="submit"], input[type="button"] { background: var(--gold-gradient) !important; color: #022c22 !important; font-weight: 900 !important; border-radius: 8px !important; }
