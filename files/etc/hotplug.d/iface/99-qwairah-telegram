@@ -1,0 +1,2 @@
+#!/bin/sh
+[ "$ACTION" = "ifup" ] && [ "$INTERFACE" = "wan" ] && /usr/bin/qwairah-telegram.sh "اتصال WAN نشط"

@@ -1,0 +1,31 @@
+name: Build QWAIRAH MT7621 Firmware
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: true
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential clang flex bison gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+      - name: Clone OpenWrt
+        run: |
+          git clone --branch openwrt-23.05 --depth 1 https://github.com/openwrt/openwrt.git openwrt
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a -f
+      - name: Inject Files
+        run: cp -r files openwrt/ && cp .config openwrt/.config && cd openwrt && make defconfig
+      - name: Compile
+        run: cd openwrt && make -j$(nproc) || make -j1 V=s
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QWAIRAH-MT7621-Firmware
+          path: openwrt/bin/targets/ramips/mt7621/*.bin

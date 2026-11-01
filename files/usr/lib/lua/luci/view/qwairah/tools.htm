@@ -1,0 +1,47 @@
+<%+header%>
+<div class="cbi-map">
+<h2 style="color: #fbbf24; text-shadow: 0 0 5px #000;">⚡ لوحة تحكم شبكة قويره نت - QWAIRAH ISP</h2>
+
+<div class="cbi-section">
+<h3>🤖 إعدادات بوت التليجرام التفاعلي</h3>
+<p>أدخل Token وبوت Chat ID لتفعيل التنبيهات والأوامر:</p>
+<input type="text" id="tg_token" placeholder="Bot Token" style="width:40%; padding:8px; border-radius:6px;" />
+<input type="text" id="tg_chat" placeholder="Chat ID" style="width:30%; padding:8px; border-radius:6px;" />
+<button class="cbi-button" onclick="saveTG()">حفظ وربط البوت</button>
+</div>
+
+<div class="cbi-section">
+<h3>🚀 اختبار سرعة الإنترنت المباشر</h3>
+<button class="cbi-button" onclick="runSpeedtest()">بدء الفحص</button>
+<pre id="speed_res" style="background:#021e17; color:#10b981; padding:15px; border-radius:8px; margin-top:10px;">بانتظار الفحص...</pre>
+</div>
+
+<div class="cbi-section">
+<h3>📡 ماسح القنوات والشبكات المجاورة والـ SNR</h3>
+<button class="cbi-button" onclick="runScan()">فحص الترددات والقنوات</button>
+<pre id="scan_res" style="background:#021e17; color:#fbbf24; padding:15px; border-radius:8px; margin-top:10px;">بانتظار الفحص...</pre>
+</div>
+</div>
+
+<script type="text/javascript">
+function saveTG() {
+var t = document.getElementById('tg_token').value;
+var c = document.getElementById('tg_chat').value;
+XHR.get('<%=url("admin/qwairah/save_tg")%>', { token: t, chat_id: c }, function(x, res) {
+alert('تم حفظ إعدادات التليجرام وإرسال تنبيه التجربة بنجاح!');
+});
+}
+function runSpeedtest() {
+document.getElementById('speed_res').innerHTML = 'جاري قياس السرعة...';
+XHR.get('<%=url("admin/qwairah/speedtest")%>', nil, function(x, res) {
+document.getElementById('speed_res').innerHTML = res.result;
+});
+}
+function runScan() {
+document.getElementById('scan_res').innerHTML = 'جاري مسح الإشارات وقنوات الواي فاي...';
+XHR.get('<%=url("admin/qwairah/scan")%>', nil, function(x, res) {
+document.getElementById('scan_res').innerHTML = res.scan;
+});
+}
+</script>
+<%+footer%>
