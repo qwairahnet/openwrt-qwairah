@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root {
+    --primary-green: #00FF66;
+    --dark-green: #022c22;
+    --bright-green: #10b981;
+    --gold-main: #FFD700;
+    --gold-bright: #FFEA75;
+    --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #B8860B 100%);
+    --bg-gradient: linear-gradient(135deg, #011c14 0%, #022c22 50%, #01120d 100%);
+}
+* { font-family: 'Cairo', sans-serif !important; }
+body { background: var(--bg-gradient) !important; color: #f8fafc !important; min-height: 100vh; direction: rtl; }
+
+/* نقل القائمة الجانبية إلى يسار الشاشة والتنسيق المطلوب */
+.main > .left, .node-main > .left, .dark nav, .cbi-map { direction: ltr; }
+.main-left, .sw-left, nav, .pull-left { float: left !important; }
+.main-right, .sw-right, .pull-right { float: right !important; }
+
+header, .navbar, .dark nav { background: linear-gradient(90deg, #022c22 0%, #065f46 100%) !important; border-bottom: 3px solid var(--gold-main) !important; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.35); }
+.brand, .navbar-brand, h1, h2, h3, h4, .legend { color: var(--gold-bright) !important; font-weight: 900 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+a { color: var(--gold-bright) !important; }
+.cbi-section, .panel, .card, fieldset, table { background: rgba(2, 44, 34, 0.92) !important; border: 2px solid var(--gold-main) !important; border-radius: 14px !important; box-shadow: 0 8px 25px rgba(0,0,0,0.45); }
+th { background: rgba(6, 95, 70, 0.9) !important; color: var(--gold-bright) !important; border-bottom: 1px solid var(--gold-main) !important; }
+.cbi-button, .btn, input[type="submit"], input[type="button"] { background: var(--gold-gradient) !important; color: #022c22 !important; font-weight: 900 !important; border-radius: 8px !important; border: 1px solid #fff !important; }
+.cbi-button:hover, .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }

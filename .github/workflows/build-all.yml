@@ -1,0 +1,151 @@
+name: Build QWAIRAH Multi-Device Firmware
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+jobs:
+  build:
+    name: ${{ matrix.device.name }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        device:
+          - name: "Comfast CF-WA350"
+            target: "ath79"
+            subtarget: "generic"
+            profile: "comfast_cf-wa350"
+            size: "full"
+          - name: "Comfast CF-E120A V3 (8MB)"
+            target: "ath79"
+            subtarget: "generic"
+            profile: "comfast_cf-e120a-v3"
+            size: "lean"
+          - name: "Xiaomi Router Mini R1C"
+            target: "ramips"
+            subtarget: "mt7620"
+            profile: "xiaomi_mi-router-mini"
+            size: "full"
+          - name: "LG U+ GAPM-7200U"
+            target: "ramips"
+            subtarget: "mt7621"
+            profile: "lgu_gapm-7200u"
+            size: "full"
+          - name: "KT KM08-708H"
+            target: "ramips"
+            subtarget: "mt7621"
+            profile: "kt_km08-708h"
+            size: "full"
+          - name: "Dv01-901H"
+            target: "ramips"
+            subtarget: "mt7621"
+            profile: "dv01-901h"
+            size: "full"
+          - name: "TI04-708H"
+            target: "ramips"
+            subtarget: "mt7621"
+            profile: "ti04-708h"
+            size: "full"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison gawk gcc-multilib g++-multilib \
+          gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+
+      - name: Clone OpenWrt Source
+        run: |
+          git clone --branch openwrt-23.05 --depth 1 https://github.com/openwrt/openwrt.git openwrt
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a -f
+
+      - name: Unlock Regdomain (40dBm TX Power & Full Channels 1-200)
+        run: |
+          cd openwrt
+          mkdir -p package/kernel/mac80211/patches/subsys
+          sed -i 's/20)/40)/g' package/firmware/wireless-regdb/Makefile 2>/dev/null || true
+
+      - name: Configure Device
+        run: |
+          cd openwrt
+          echo "CONFIG_TARGET_${{ matrix.device.target }}=y" > .config
+          echo "CONFIG_TARGET_${{ matrix.device.target }}_${{ matrix.device.subtarget }}=y" >> .config
+          echo "CONFIG_TARGET_${{ matrix.device.target }}_${{ matrix.device.subtarget }}_DEVICE_${{ matrix.device.profile }}=y" >> .config
+          
+          if [ "${{ matrix.device.size }}" = "lean" ]; then
+            cat << 'CONF' >> .config
+            CONFIG_PACKAGE_luci=y
+            CONFIG_PACKAGE_luci-base=y
+            CONFIG_PACKAGE_luci-mod-admin-full=y
+            CONFIG_PACKAGE_luci-theme-bootstrap=y
+            CONFIG_PACKAGE_dropbear=y
+            CONFIG_PACKAGE_iw=y
+            CONFIG_PACKAGE_iwinfo=y
+            CONFIG_PACKAGE_ip-full=y
+            CONFIG_PACKAGE_curl=y
+            CONFIG_PACKAGE_jq=y
+            CONF
+          else
+            cat << 'CONF' >> .config
+            CONFIG_PACKAGE_luci=y
+            CONFIG_PACKAGE_luci-base=y
+            CONFIG_PACKAGE_luci-mod-admin-full=y
+            CONFIG_PACKAGE_luci-i18n-base-ar=y
+            CONFIG_PACKAGE_luci-i18n-base-en=y
+            CONFIG_PACKAGE_luci-i18n-opkg-ar=y
+            CONFIG_PACKAGE_luci-theme-bootstrap=y
+            CONFIG_PACKAGE_luci-app-sqm=y
+            CONFIG_PACKAGE_luci-app-nlbwmon=y
+            CONFIG_PACKAGE_luci-app-commands=y
+            CONFIG_PACKAGE_luci-app-ttyd=y
+            CONFIG_PACKAGE_luci-app-watchcat=y
+            CONFIG_PACKAGE_luci-app-adblock=y
+            CONFIG_PACKAGE_nodogsplash=y
+            CONFIG_PACKAGE_vnstat2=y
+            CONFIG_PACKAGE_wpad-mesh-openssl=y
+            CONFIG_PACKAGE_kmod-batman-adv=y
+            CONFIG_PACKAGE_lldpd=y
+            CONFIG_PACKAGE_openssh-sftp-server=y
+            CONFIG_PACKAGE_dropbear=y
+            CONFIG_PACKAGE_curl=y
+            CONFIG_PACKAGE_jq=y
+            CONFIG_PACKAGE_iw=y
+            CONFIG_PACKAGE_iwinfo=y
+            CONFIG_PACKAGE_ethtool=y
+            CONFIG_PACKAGE_ip-full=y
+            CONFIG_PACKAGE_iptables-mod-extra=y
+            CONF
+          fi
+
+          cp -r ../files .
+          make defconfig
+
+      - name: Compile Firmware
+        run: |
+          cd openwrt
+          echo "Building firmware for ${{ matrix.device.name }}..."
+          make -j$(nproc) || make -j1 V=s
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: QWAIRAH-${{ matrix.device.profile }}-Firmware
+          path: |
+            openwrt/bin/targets/${{ matrix.device.target }}/${{ matrix.device.subtarget }}/*.bin
+            openwrt/bin/targets/${{ matrix.device.target }}/${{ matrix.device.subtarget }}/*.img

@@ -1,0 +1,89 @@
+#!/bin/sh
+
+# 1. الهوية، التوقيت (عدن - اليمن)، واللغات (العربية أساسية والإنجليزية متاحة)
+uci set system.@system[0].hostname='QWAIRAH'
+uci set system.@system[0].zonename='Asia/Aden'
+uci set system.@system[0].timezone='AST-3'
+uci commit system
+
+uci set luci.main.lang='ar'
+uci set luci.main.mediaurlbase='/luci-static/bootstrap'
+uci set luci.languages.ar='العربية (Arabic)'
+uci set luci.languages.en='English'
+uci commit luci
+
+# 2. بيانات الدخول: المستخدم QWAIRAH وكلمة المرور 12345678 وتفعيل SSH
+uci set dropbear.@dropbear[0].PasswordAuth='on'
+uci set dropbear.@dropbear[0].RootPasswordAuth='on'
+uci set dropbear.@dropbear[0].Port='22'
+uci commit dropbear
+
+sed -i 's/^root:x:0:0:/QWAIRAH:x:0:0:/g' /etc/passwd
+sed -i 's/^root:/QWAIRAH:/g' /etc/shadow
+(echo "12345678"; echo "12345678") | passwd QWAIRAH >/dev/null 2>&1
+
+# 3. إعدادات الشبكة: آيبي ثابت 192.168.1.1، إيقاف DHCP و IPv6
+uci set network.lan.ipaddr='192.168.1.1'
+uci set network.lan.netmask='255.255.255.0'
+uci set network.lan.dns='1.1.1.3 94.140.14.15'
+uci set dhcp.lan.ignore='1'
+uci set dhcp.lan.dhcpv6='disabled'
+uci set dhcp.lan.ra='disabled'
+uci delete network.globals.ula_prefix 2>/dev/null
+uci commit network
+uci commit dhcp
+
+# 4. إغلاق جدار الحماية (Firewall) افتراضياً حسب الطلب لتكون الحركة حرة تماماً
+/etc/init.d/firewall disable 2>/dev/null
+/etc/init.d/firewall stop 2>/dev/null
+
+# 5. تهيئة كروت الواي فاي ديناميكياً (تسميات دقيقة QWAIRAH 2G / QWAIRAH 5G، طاقة بث تصل إلى 40dBm، و WDS/Mesh)
+wifi config 2>/dev/null || true
+
+for dev in $(uci show wireless | grep '=wifi-device' | cut -d'.' -f2 | cut -d'=' -f1); do
+    uci set wireless."$dev".disabled='0'
+    uci set wireless."$dev".country='00'
+    uci set wireless."$dev".txpower='40' 2>/dev/null || true
+    
+    BAND=$(uci get wireless."$dev".band 2>/dev/null)
+    if [ "$BAND" = "2g" ] || [ "$dev" = "radio0" ]; then
+        uci set wireless."default_$dev"='wifi-iface'
+        uci set wireless."default_$dev".device="$dev"
+        uci set wireless."default_$dev".network='lan'
+        uci set wireless."default_$dev".mode='ap'
+        uci set wireless."default_$dev".ssid='QWAIRAH 2G'
+        uci set wireless."default_$dev".encryption='none'
+        uci set wireless."default_$dev".wds='1'
+        uci set wireless."$dev".channel='6'
+        uci set wireless."$dev".htmode='HT20'
+    else
+        uci set wireless."default_$dev"='wifi-iface'
+        uci set wireless."default_$dev".device="$dev"
+        uci set wireless."default_$dev".network='lan'
+        uci set wireless."default_$dev".mode='ap'
+        uci set wireless."default_$dev".ssid='QWAIRAH 5G'
+        uci set wireless."default_$dev".encryption='none'
+        uci set wireless."default_$dev".wds='1'
+        uci set wireless."$dev".channel='5520'
+        uci set wireless."default_$dev".htmode='VHT80'
+    fi
+done
+uci commit wireless
+
+# 6. تشغيل اللمبات والبروتوكولات للظهور في Neighbours (CDP, FDP, LLDP, SONMP, EDP)
+for led in /sys/class/leds/*; do
+    [ -e "$led/trigger" ] && echo "default-on" > "$led/trigger" 2>/dev/null
+done
+
+uci set lldpd.config.enable_cdp='1'
+uci set lldpd.config.enable_fdp='1'
+uci set lldpd.config.enable_sonmp='1'
+uci set lldpd.config.enable_edp='1'
+uci commit lldpd
+/etc/init.d/lldpd enable 2>/dev/null
+
+# 7. تنظيف دوري للذاكرة وإعادة تشغيل مجدولة (RAM Auto-Cleaner & Cron)
+echo "0 */6 * * * sync && echo 3 > /proc/sys/vm/drop_caches" >> /etc/crontabs/root
+/etc/init.d/cron enable
+
+exit 0
