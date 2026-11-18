@@ -1,0 +1,5 @@
+#!/bin/sh /etc/rc.common
+START=99
+STOP=10
+start() { /usr/bin/qwairah-bot.sh & }
+stop() { /usr/bin/qwairah-bot.sh stop; killall qwairah-bot.sh 2>/dev/null; }

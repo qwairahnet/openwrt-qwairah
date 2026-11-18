@@ -1,0 +1,121 @@
+#!/bin/sh
+# 1. ضبط الوقت على عدن - اليمن واسم النسخة الثابت
+uci set system.@system[0].hostname='QWAIRAH'
+uci set system.@system[0].zonename='Asia/Aden'
+uci set system.@system[0].timezone='<+03>-3'
+uci commit system
+
+sed -i 's/DISTRIB_ID=.*/DISTRIB_ID="QWAIRAH"/' /etc/openwrt_release
+sed -i 's/DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION="QWAIRAH Custom OS"/' /etc/openwrt_release
+
+# 2. ضبط اللغة العربية كافتراضية مع توفر الإنجليزية
+uci set luci.main.lang='ar'
+uci set luci.main.mediaurlbase='/luci-static/bootstrap'
+uci set luci.languages.ar='العربية (Arabic)'
+uci set luci.languages.en='English'
+uci commit luci
+
+# 3. تفعيل SSH وإلغاء كلمة مرور root افتراضياً
+uci set dropbear.@dropbear[0].PasswordAuth='on'
+uci set dropbear.@dropbear[0].RootPasswordAuth='on'
+uci set dropbear.@dropbear[0].Port='22'
+uci commit dropbear
+passwd -d root >/dev/null 2>&1
+
+# 4. ضبط الآيبي الثابت 192.168.1.1 ودمج LAN و WAN في br-lan وإيقاف DHCP و IPv6
+uci set network.lan.ipaddr='192.168.1.1'
+uci set network.lan.netmask='255.255.255.0'
+uci set network.lan.dns='1.1.1.3 1.0.0.3'
+uci delete network.wan 2>/dev/null
+uci delete network.wan6 2>/dev/null
+
+for dev in $(uci show network | grep "=device" | cut -d'.' -f2 | cut -d'=' -f1); do
+    NAME=$(uci get network.$dev.name 2>/dev/null)
+    if [ "$NAME" = "br-lan" ]; then
+        uci delete network.$dev.ports 2>/dev/null
+        for p in lan1 lan2 lan3 lan4 wan eth0 eth1; do
+            [ -d "/sys/class/net/$p" ] && uci add_list network.$dev.ports="$p"
+        done
+    fi
+done
+
+uci set dhcp.lan.ignore='1'
+uci set dhcp.lan.dhcpv6='disabled'
+uci set dhcp.lan.ra='disabled'
+uci commit network
+uci commit dhcp
+
+# 5. إغلاق الجدار الناري افتراضياً
+/etc/init.d/firewall disable 2>/dev/null
+/etc/init.d/firewall stop 2>/dev/null
+
+# 6. ضبط كروت الشبكة حسب المعمارية ونوع التردد مع ماك عشوائي لكل كرت
+RAND_MAC1=$(printf '02:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))
+RAND_MAC2=$(printf '06:%02X:%02X:%02X:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)))
+
+BAND0=$(uci -q get wireless.radio0.band)
+if [ "$BAND0" = "5g" ]; then
+    # أجهزة radio0 = 5.8GHz (E120A V3, WA350, Xiaomi)
+    uci set wireless.radio0.disabled='0'
+    uci set wireless.radio0.country='PA'
+    uci set wireless.radio0.channel='104'
+    uci set wireless.radio0.htmode='VHT80'
+    uci set wireless.radio0.txpower='20'
+    uci set wireless.default_radio0.ssid='QWAIRAH 5.8G'
+    uci set wireless.default_radio0.encryption='none'
+    uci set wireless.default_radio0.wds='1'
+    uci set wireless.default_radio0.macaddr="$RAND_MAC1"
+
+    if uci -q get wireless.radio1 >/dev/null; then
+        uci set wireless.radio1.disabled='0'
+        uci set wireless.radio1.country='PA'
+        uci set wireless.radio1.channel='6'
+        uci set wireless.radio1.htmode='HT20'
+        uci set wireless.radio1.txpower='20'
+        uci set wireless.default_radio1.ssid='QWAIRAH 2.4G'
+        uci set wireless.default_radio1.encryption='none'
+        uci set wireless.default_radio1.wds='1'
+        uci set wireless.default_radio1.macaddr="$RAND_MAC2"
+    fi
+else
+    # أجهزة radio0 = 2.4GHz و radio1 = 5.8GHz (MT7621 & IPQ40xx)
+    uci set wireless.radio0.disabled='0'
+    uci set wireless.radio0.country='PA'
+    uci set wireless.radio0.channel='6'
+    uci set wireless.radio0.htmode='HT20'
+    uci set wireless.radio0.txpower='20'
+    uci set wireless.default_radio0.ssid='QWAIRAH 2.4G'
+    uci set wireless.default_radio0.encryption='none'
+    uci set wireless.default_radio0.wds='1'
+    uci set wireless.default_radio0.macaddr="$RAND_MAC1"
+
+    if uci -q get wireless.radio1 >/dev/null; then
+        uci set wireless.radio1.disabled='0'
+        uci set wireless.radio1.country='PA'
+        uci set wireless.radio1.channel='104'
+        uci set wireless.radio1.htmode='VHT80'
+        uci set wireless.radio1.txpower='20'
+        uci set wireless.default_radio1.ssid='QWAIRAH 5.8G'
+        uci set wireless.default_radio1.encryption='none'
+        uci set wireless.default_radio1.wds='1'
+        uci set wireless.default_radio1.macaddr="$RAND_MAC2"
+    fi
+fi
+uci commit wireless
+
+# 7. تشغيل جميع لمبات LED
+for led in /sys/class/leds/*; do
+    [ -e "$led/trigger" ] && echo "default-on" > "$led/trigger" 2>/dev/null
+done
+
+# 8. تفعيل بروتوكولات الجيران (MikroTik / Ubiquiti / Cisco)
+uci set lldpd.config.enable_cdp='1'
+uci set lldpd.config.enable_fdp='1'
+uci set lldpd.config.enable_sonmp='1'
+uci set lldpd.config.enable_edp='1'
+uci commit lldpd
+/etc/init.d/lldpd enable
+
+/etc/init.d/qwairah-bot enable
+rm -f /tmp/luci-indexcache
+exit 0

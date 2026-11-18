@@ -1,0 +1,34 @@
+<%+header%>
+<h2>⚡ البرمجة السريعة - شبكة قويره نت (QWAIRAH)</h2>
+<div class="cbi-section">
+    <form id="qform">
+        <label>وضع التشغيل (Mode):</label><br/>
+        <select name="mode" style="width:100%;padding:8px;margin:5px 0;">
+            <option value="ap_wds">مرسل Access Point WDS (Bridge)</option>
+            <option value="sta_wds">مستقبل Client WDS (Bridge)</option>
+            <option value="mesh">ربط شبكي Mesh (802.11s)</option>
+        </select><br/>
+        <label>كرت الشبكة (Radio):</label><br/>
+        <select name="band" style="width:100%;padding:8px;margin:5px 0;">
+            <option value="radio0">Radio 0</option>
+            <option value="radio1">Radio 1</option>
+        </select><br/>
+        <label>اسم الشبكة (SSID / Mesh ID):</label><br/>
+        <input type="text" name="ssid" value="QWAIRAH" style="width:100%;padding:8px;margin:5px 0;"/><br/>
+        <label>رقم VLAN (اختياري - اتركه فارغاً للربط المباشر):</label><br/>
+        <input type="text" name="vlan_id" placeholder="مثال: 100" style="width:100%;padding:8px;margin:5px 0;"/><br/>
+        <label>الآيبي الثابت للجهاز:</label><br/>
+        <input type="text" name="ipaddr" value="192.168.1.1" style="width:100%;padding:8px;margin:5px 0;"/><br/><br/>
+        <button type="button" class="cbi-button" onclick="applyQuick()">حفظ وتطبيق البرمجة فوراً</button>
+    </form>
+    <pre id="qres" style="margin-top:15px;color:#00FF66;"></pre>
+</div>
+<script>
+function applyQuick() {
+    var fd = new FormData(document.getElementById('qform'));
+    fd.append('act', 'quick_apply');
+    fetch('<%=url("admin/qwairah/action")%>', {method:'POST', body:fd})
+    .then(r => r.text()).then(t => document.getElementById('qres').innerText = t);
+}
+</script>
+<%+footer%>

@@ -1,0 +1,15 @@
+<%+header%>
+<h2>📡 فحص القنوات والشبكات المجاورة (مرتبة حسب الإشارة)</h2>
+<div class="cbi-section">
+    <button class="cbi-button" onclick="runScan('radio0')">فحص كرت Radio 0</button>
+    <button class="cbi-button" onclick="runScan('radio1')">فحص كرت Radio 1</button>
+    <pre id="scan_out" style="margin-top:15px;direction:ltr;text-align:left;background:#01120d;padding:10px;border-radius:8px;"></pre>
+</div>
+<script>
+function runScan(dev) {
+    document.getElementById('scan_out').innerText = "جاري الفحص...";
+    fetch('<%=url("admin/qwairah/action")%>?act=scan&dev=' + dev)
+    .then(r => r.text()).then(t => document.getElementById('scan_out').innerText = t);
+}
+</script>
+<%+footer%>

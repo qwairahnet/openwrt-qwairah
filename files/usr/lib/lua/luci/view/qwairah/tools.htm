@@ -1,0 +1,26 @@
+<%+header%>
+<h2>🛠️ أدوات الفحص واختبار السرعة - QWAIRAH</h2>
+<div class="cbi-section">
+    <h3>1. فحص الاتصال (Ping)</h3>
+    <input type="text" id="phost" value="1.1.1.1" style="padding:8px;width:60%;"/>
+    <button class="cbi-button" onclick="runPing()">بدء Ping</button>
+    <pre id="pout" style="margin-top:10px;direction:ltr;text-align:left;"></pre>
+    <hr/>
+    <h3>2. اختبار سرعة الإنترنت</h3>
+    <button class="cbi-button" onclick="runSpeed()">فحص سرعة التحميل الآن</button>
+    <pre id="sout" style="margin-top:10px;"></pre>
+</div>
+<script>
+function runPing() {
+    var h = document.getElementById('phost').value;
+    document.getElementById('pout').innerText = "جاري الفحص...";
+    fetch('<%=url("admin/qwairah/action")%>?act=ping&host=' + h)
+    .then(r => r.text()).then(t => document.getElementById('pout').innerText = t);
+}
+function runSpeed() {
+    document.getElementById('sout').innerText = "جاري قياس السرعة...";
+    fetch('<%=url("admin/qwairah/action")%>?act=speed')
+    .then(r => r.text()).then(t => document.getElementById('sout').innerText = t);
+}
+</script>
+<%+footer%>

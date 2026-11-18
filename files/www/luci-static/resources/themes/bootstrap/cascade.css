@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root {
+    --primary-green: #00FF66;
+    --dark-green: #022c22;
+    --gold-main: #FFD700;
+    --gold-bright: #FFEA75;
+    --gold-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #B8860B 100%);
+    --bg-gradient: linear-gradient(135deg, #011c14 0%, #022c22 50%, #01120d 100%);
+}
+* { font-family: 'Cairo', sans-serif !important; }
+body { background: var(--bg-gradient) !important; color: #f8fafc !important; min-height: 100vh; direction: rtl; }
+.main { display: flex !important; flex-direction: row-reverse !important; }
+.main > .left, .node-main > .left, nav, .main-left, .sw-left {
+    order: 2 !important; float: left !important; width: 245px !important;
+    background: linear-gradient(180deg, #022c22 0%, #011913 100%) !important;
+    border-right: 3px solid var(--gold-main) !important; min-height: 100vh !important; direction: ltr !important; text-align: left !important;
+    box-shadow: 4px 0 20px rgba(0, 255, 102, 0.25) !important;
+}
+.main > .right, .node-main > .right, .main-right, .sw-right { order: 1 !important; flex-grow: 1 !important; direction: rtl !important; padding: 15px !important; }
+header, .navbar, .dark nav { background: linear-gradient(90deg, #022c22 0%, #065f46 100%) !important; border-bottom: 3px solid var(--gold-main) !important; }
+header::after { content: "★ QWAIRAH NETWORK ★"; float: right; color: var(--gold-bright); font-weight: 900; padding: 10px 15px; font-size: 16px; letter-spacing: 1px; }
+footer::before { content: "Powered by QWAIRAH SYSTEM - All Rights Reserved"; display: block; text-align: center; color: var(--gold-main); font-weight: bold; padding: 10px; }
+.brand, .navbar-brand, h1, h2, h3, h4, .legend { color: var(--gold-bright) !important; font-weight: 900 !important; }
+a { color: var(--gold-bright) !important; font-weight: 700 !important; }
+a:hover { color: var(--primary-green) !important; }
+.cbi-section, .panel, .card, fieldset, table, .ifacebox {
+    background: rgba(2, 44, 34, 0.94) !important; border: 2px solid var(--gold-main) !important; border-radius: 14px !important;
+}
+.cbi-button, .btn, input[type="submit"], input[type="button"] {
+    background: var(--gold-gradient) !important; color: #022c22 !important; font-weight: 900 !important; border-radius: 8px !important; cursor: pointer;
+}

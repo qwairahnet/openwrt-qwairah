@@ -1,0 +1,3 @@
+config settings 'general'
+option token ''
+option chat_id ''
