@@ -1,0 +1,77 @@
+/* تصميم QWAIRAH الفاخر - أخضر لامع وذهبي لامع مع القائمة الجانبية اليسارية العمودية */
+body {
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-family: 'Cairo', sans-serif;
+}
+.main > .container {
+    background: #1e293b;
+    border: 1px solid #d4af37;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+}
+/* القائمة الجانبية العمودية على اليسار */
+.node-main-menu, .main-left {
+    position: fixed !important;
+    left: 0 !important;
+    top: 50px !important;
+    width: 240px !important;
+    height: 100vh !important;
+    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%) !important;
+    border-right: 2px solid #d4af37 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding-top: 20px;
+    z-index: 1000;
+}
+.node-main-menu a, .main-left a {
+    color: #f3f4f6 !important;
+    padding: 12px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    transition: 0.3s;
+}
+.node-main-menu a:hover, .main-left a:hover {
+    background: #d4af37 !important;
+    color: #064e3b !important;
+    box-shadow: inset 4px 0 0 #10b981;
+}
+/* الأزرار والأيقونات بلمسات الذهب والأخضر اللامع */
+.btn-primary, .cbi-button-action {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: 1px solid #d4af37 !important;
+    color: #ffffff !important;
+    font-weight: bold;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+    color: #000000 !important;
+}
+h1, h2, h3, legend {
+    color: #d4af37 !important;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+/* إخفاء حقوق GitHub وروابط السورس الافتراضية تماماً من الواجهة */
+.footer div a[href*="github.com"],
+.footer div a[href*="openwrt.org"],
+#footer a,
+.cbi-map-descr a {
+    display: none !important;
+}
+
+/* تخصيص تذييل الصفحة (Footer) ليحمل اسم شبكتك فقط بشكل فاخر */
+.footer::after {
+    content: "QWAIRAH NET - جميع الحقوق محفوظة © 2026";
+    display: block;
+    color: #d4af37;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 5px;
+    text-align: center;
+}
