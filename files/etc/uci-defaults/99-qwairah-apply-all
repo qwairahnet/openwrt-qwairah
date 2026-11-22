@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ -x /usr/bin/qwairah-apply-all.sh ]; then
+  /usr/bin/qwairah-apply-all.sh
+fi
+exit 0
