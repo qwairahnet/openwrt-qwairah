@@ -1,0 +1,26 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+NOTIFY_SCRIPT="/usr/bin/qwairah-tg-notify.sh"
+WATCH_SCRIPT="/usr/bin/qwairah-watch.sh"
+PID_FILE="/var/run/qwairah-watch.pid"
+
+start() {
+  [ -x "$NOTIFY_SCRIPT" ] && /bin/sh "$NOTIFY_SCRIPT" boot >/dev/null 2>&1 &
+  if [ -x "$WATCH_SCRIPT" ]; then
+    kill $(cat "$PID_FILE" 2>/dev/null) 2>/dev/null || true
+    /bin/sh "$WATCH_SCRIPT" >/dev/null 2>&1 &
+    echo $! > "$PID_FILE"
+  fi
+}
+
+stop() {
+  if [ -f "$PID_FILE" ]; then
+    kill $(cat "$PID_FILE" 2>/dev/null) 2>/dev/null || true
+    rm -f "$PID_FILE"
+  fi
+  [ -x "$NOTIFY_SCRIPT" ] && /bin/sh "$NOTIFY_SCRIPT" shutdown >/dev/null 2>&1
+  sleep 1
+}
